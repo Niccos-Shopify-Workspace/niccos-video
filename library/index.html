@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Videos · NICCOS Clip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FCFCFB; --paper-soft: #F7F6F3; --ink: #1A1915; --ink-soft: #4A4945;
+    --muted: #6F6E69; --line: #E4E2DC; --line-soft: #ECEAE5; --accent-soft: #E8E7E4;
+    --hover: #EFEEE9; --active: #ECEBE5; --bronze: #8A6A3D; --danger: #B42318;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: "Manrope", -apple-system, sans-serif; background: var(--paper-soft);
+    color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 20px 20px 80px; }
+  header.site { display: flex; align-items: center; gap: 8px; padding: 6px 0 22px; }
+  .wordmark { height: 16px; display: block; }
+  .pro {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    color: var(--ink-soft); background: var(--active); border-radius: 6px; padding: 2px 7px;
+  }
+  .pagename { color: var(--muted); margin-left: 6px; font-size: 13px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.16em; font-size: 10.5px; color: var(--muted); font-weight: 600; }
+  h1 { font-weight: 500; font-size: 30px; letter-spacing: -0.02em; margin: 2px 0 20px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .toolbar input[type=search] {
+    flex: 1; min-width: 220px; max-width: 420px; font: inherit; font-size: 13.5px;
+    border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px;
+    background: var(--paper); color: var(--ink);
+  }
+  .toolbar input:focus, select:focus { outline: none; border-color: var(--ink-soft); }
+  .toolbar select {
+    font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 12px; background: var(--paper); color: var(--ink); cursor: pointer;
+  }
+  #count { margin-left: auto; color: var(--muted); font-size: 13px; }
+  .grid {
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+  .card {
+    background: var(--paper); border: 1px solid var(--line-soft); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .card:hover { box-shadow: 0 8px 28px rgba(26,25,21,0.1); transform: translateY(-1px); }
+  .thumbwrap { position: relative; aspect-ratio: 16/10; background: var(--accent-soft); cursor: pointer; }
+  .thumbwrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumbwrap .noimg {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 12px;
+  }
+  .dur {
+    position: absolute; right: 8px; bottom: 8px; background: rgba(26,25,21,0.85);
+    color: var(--paper); font-size: 11.5px; font-variant-numeric: tabular-nums;
+    border-radius: 6px; padding: 2px 7px;
+  }
+  .badges { position: absolute; left: 8px; top: 8px; display: flex; gap: 5px; }
+  .badge {
+    font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 2px 8px;
+    background: rgba(252,252,251,0.92); color: var(--ink-soft);
+  }
+  .badge.schutz { color: var(--bronze); }
+  .badge.up { color: var(--danger); }
+  .cbody { padding: 12px 14px 10px; flex: 1; display: flex; flex-direction: column; }
+  .title {
+    font-size: 14px; font-weight: 600; color: var(--ink); width: 100%;
+    border: 1px solid transparent; border-radius: 7px; padding: 3px 6px; margin-left: -6px;
+    background: transparent; font-family: inherit;
+  }
+  .title:hover { border-color: var(--line-soft); }
+  .title:focus { outline: none; border-color: var(--ink-soft); background: var(--paper-soft); }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .cfoot { display: flex; gap: 6px; padding: 10px 14px 13px; flex-wrap: wrap; }
+  .cfoot button {
+    font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--paper);
+    color: var(--ink-soft); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  }
+  .cfoot button:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--hover); }
+  .cfoot button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .cfoot button.primary:hover { background: #32302B; }
+  .cfoot button.danger:hover { border-color: var(--danger); color: var(--danger); background: var(--paper); }
+  .state { text-align: center; padding: 100px 20px; color: var(--muted); }
+  .state h2 { color: var(--ink); font-weight: 500; font-size: 20px; margin-bottom: 8px; }
+  .gate { max-width: 380px; margin: 60px auto; background: var(--paper); border: 1px solid var(--line-soft); border-radius: 16px; padding: 28px; }
+  .gate h2 { font-weight: 500; font-size: 18px; margin-bottom: 6px; }
+  .gate p { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .gate input {
+    width: 100%; font: inherit; font-size: 13.5px; border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 13px; background: var(--paper-soft); color: var(--ink);
+  }
+  .gate button {
+    width: 100%; margin-top: 12px; font: inherit; font-size: 14px; font-weight: 600;
+    border: 0; border-radius: 10px; padding: 11px 0; background: var(--ink); color: var(--paper); cursor: pointer;
+  }
+  .err { color: var(--danger); font-size: 12.5px; margin-top: 10px; }
+  dialog {
+    border: 1px solid var(--line); border-radius: 16px; padding: 24px; width: 420px;
+    font-family: inherit; color: var(--ink); background: var(--paper);
+  }
+  dialog::backdrop { background: rgba(26,25,21,0.35); }
+  dialog h3 { font-weight: 600; font-size: 15px; margin-bottom: 16px; }
+  .frow { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .frow label { flex: 0 0 95px; color: var(--muted); font-size: 12.5px; }
+  .frow input {
+    font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 10px; background: var(--paper-soft); color: var(--ink); flex: 1;
+  }
+  .note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .dlg-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .dlg-foot button {
+    font: inherit; font-size: 13px; border-radius: 9px; padding: 8px 18px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft);
+  }
+  .dlg-foot button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  #toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper); border-radius: 10px; padding: 10px 20px;
+    font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 50;
+  }
+  #toast.on { opacity: 1; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <img class="wordmark" src="../assets/niccos-logo-black.svg" alt="NICCOS">
+    <span class="pro">CLIP</span>
+    <span class="pagename">Bibliothek</span>
+  </header>
+
+  <div id="gate" class="gate" hidden>
+    <h2>Private Bibliothek</h2>
+    <p>Bitte App-Token eingeben (steht in <code>~/Movies/NICCOS Clips/.config.json</code>). Wird nur in diesem Browser gespeichert.</p>
+    <input type="password" id="tokenIn" placeholder="App-Token">
+    <div class="err" id="gateErr" hidden>Token ungültig.</div>
+    <button id="tokenGo">Öffnen</button>
+  </div>
+
+  <div id="main" hidden>
+    <div class="kicker">Bibliothek</div>
+    <h1>Videos</h1>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Nach Titel suchen …">
+      <select id="sort">
+        <option value="new">Neueste zuerst</option>
+        <option value="old">Älteste zuerst</option>
+        <option value="views">Meiste Aufrufe</option>
+        <option value="long">Längste zuerst</option>
+      </select>
+      <select id="filter">
+        <option value="all">Alle</option>
+        <option value="protected">Geschützt</option>
+        <option value="open">Ohne Schutz</option>
+      </select>
+      <span id="count"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="state" id="empty" hidden><h2>Keine Videos</h2><p>Nimm den ersten Clip mit ⇧⌘L auf.</p></div>
+  </div>
+
+  <div id="loading" class="state"><p>Lade …</p></div>
+</div>
+
+<dialog id="protDlg">
+  <h3>Link-Schutz</h3>
+  <div class="frow"><label>Passwort</label><input id="protPw" type="text" placeholder="leer = kein Passwort"></div>
+  <div class="frow"><label>Ablaufdatum</label><input id="protExp" type="datetime-local"></div>
+  <div class="note">Gilt für die Share-Seite dieses Videos. Leere Felder entfernen den jeweiligen Schutz.</div>
+  <div class="dlg-foot">
+    <button id="protCancel">Abbrechen</button>
+    <button class="primary" id="protGo">Speichern</button>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+const API = "https://jczmvbflyrehpywngnro.supabase.co/functions/v1/clip";
+const $ = (id) => document.getElementById(id);
+let TOKEN = "";
+let videos = [];
+let activeId = null;
+
+try { TOKEN = localStorage.getItem("clip-token") || ""; } catch {}
+
+function fmtTime(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function fmtDate(iso) {
+  try { return new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" }); }
+  catch { return ""; }
+}
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(t._x);
+  t._x = setTimeout(() => t.classList.remove("on"), 2200);
+}
+function show(id) {
+  ["gate", "main", "loading"].forEach((x) => $(x).hidden = x !== id);
+}
+
+async function api(path, body) {
+  const res = await fetch(API + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-app-token": TOKEN },
+    body: JSON.stringify(body || {}),
+  });
+  return { status: res.status, data: await res.json().catch(() => ({})) };
+}
+
+async function load() {
+  if (!TOKEN) { show("gate"); return; }
+  show("loading");
+  const { status, data } = await api("/list");
+  if (status === 401) {
+    try { localStorage.removeItem("clip-token"); } catch {}
+    TOKEN = "";
+    $("gateErr").hidden = false;
+    show("gate");
+    return;
+  }
+  videos = data.videos || [];
+  render();
+  show("main");
+}
+
+function visible() {
+  const q = $("search").value.trim().toLowerCase();
+  const f = $("filter").value;
+  let list = videos.filter((v) => !q || (v.title || "").toLowerCase().includes(q));
+  if (f === "protected") list = list.filter((v) => v.hasPassword || v.expiresAt);
+  if (f === "open") list = list.filter((v) => !v.hasPassword && !v.expiresAt);
+  const s = $("sort").value;
+  list = [...list].sort((a, b) => {
+    if (s === "old") return new Date(a.createdAt) - new Date(b.createdAt);
+    if (s === "views") return (b.views || 0) - (a.views || 0);
+    if (s === "long") return (b.durationSec || 0) - (a.durationSec || 0);
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+  return list;
+}
+
+function render() {
+  const list = visible();
+  const grid = $("grid");
+  grid.innerHTML = "";
+  $("empty").hidden = list.length > 0;
+  $("count").textContent = list.length + (list.length === 1 ? " Video" : " Videos");
+
+  list.forEach((v) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const tw = document.createElement("div");
+    tw.className = "thumbwrap";
+    tw.innerHTML = (v.thumbUrl
+      ? '<img loading="lazy" src="' + v.thumbUrl + '" alt="">'
+      : '<div class="noimg">Keine Vorschau</div>')
+      + (v.durationSec ? '<span class="dur">' + fmtTime(v.durationSec) + "</span>" : "");
+    const badges = [];
+    if (v.hasPassword || v.expiresAt) badges.push('<span class="badge schutz">Geschützt</span>');
+    if (!v.uploaded) badges.push('<span class="badge up">Upload läuft</span>');
+    if (badges.length) tw.innerHTML += '<div class="badges">' + badges.join("") + "</div>";
+    tw.addEventListener("click", () => window.open(v.shareUrl, "_blank"));
+    card.appendChild(tw);
+
+    const body = document.createElement("div");
+    body.className = "cbody";
+    const title = document.createElement("input");
+    title.className = "title";
+    title.value = v.title || "";
+    title.addEventListener("change", async () => {
+      const clean = title.value.trim();
+      if (!clean) { title.value = v.title; return; }
+      const res = await api("/configure", { videoId: v.videoId, title: clean });
+      if (res.status === 200) { v.title = clean; toast("Titel gespeichert"); }
+    });
+    title.addEventListener("keydown", (e) => { if (e.key === "Enter") title.blur(); });
+    body.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML =
+      "<span>" + fmtDate(v.createdAt) + "</span>" +
+      "<span>" + (v.views || 0) + (v.views === 1 ? " Aufruf" : " Aufrufe") + "</span>" +
+      "<span>" + (v.comments || 0) + (v.comments === 1 ? " Kommentar" : " Kommentare") + "</span>";
+    body.appendChild(meta);
+    card.appendChild(body);
+
+    const foot = document.createElement("div");
+    foot.className = "cfoot";
+    const btn = (label, cls, fn) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      if (cls) b.className = cls;
+      b.addEventListener("click", fn);
+      foot.appendChild(b);
+    };
+    btn("Link kopieren", "primary", async () => {
+      try { await navigator.clipboard.writeText(v.shareUrl); toast("Link kopiert"); }
+      catch { prompt("Link:", v.shareUrl); }
+    });
+    btn("Öffnen", "", () => window.open(v.shareUrl, "_blank"));
+    btn("Schutz", "", () => openProtect(v));
+    btn("Löschen", "danger", async () => {
+      if (!confirm('„' + (v.title || "Clip") + '" löschen?\n\nDer Link wird deaktiviert und die Online-Kopie entfernt. Die lokale Datei auf dem Mac bleibt erhalten.')) return;
+      const res = await api("/delete", { videoId: v.videoId });
+      if (res.status === 200) { videos = videos.filter((x) => x.videoId !== v.videoId); render(); toast("Gelöscht"); }
+      else alert(res.data.error || "Fehler");
+    });
+    card.appendChild(foot);
+
+    grid.appendChild(card);
+  });
+}
+
+function openProtect(v) {
+  activeId = v.videoId;
+  $("protPw").value = "";
+  $("protExp").value = v.expiresAt ? v.expiresAt.slice(0, 16) : "";
+  $("protDlg").showModal();
+}
+$("protCancel").addEventListener("click", () => $("protDlg").close());
+$("protGo").addEventListener("click", async () => {
+  const password = $("protPw").value.trim() || null;
+  const expRaw = $("protExp").value;
+  const expiresAt = expRaw ? new Date(expRaw).toISOString() : null;
+  const res = await api("/configure", { videoId: activeId, password, expiresAt });
+  if (res.status === 200) {
+    const v = videos.find((x) => x.videoId === activeId);
+    if (v) { v.hasPassword = !!password; v.expiresAt = expiresAt; }
+    $("protDlg").close();
+    render();
+    toast("Schutz gespeichert");
+  } else alert(res.data.error || "Fehler");
+});
+
+$("tokenGo").addEventListener("click", () => {
+  TOKEN = $("tokenIn").value.trim();
+  if (!TOKEN) return;
+  try { localStorage.setItem("clip-token", TOKEN); } catch {}
+  load();
+});
+$("tokenIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("tokenGo").click(); });
+
+$("search").addEventListener("input", render);
+$("sort").addEventListener("change", render);
+$("filter").addEventListener("change", render);
+
+load();
+</script>
+</body>
+</html>
