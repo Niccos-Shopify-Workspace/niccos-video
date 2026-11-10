@@ -38,6 +38,15 @@
   }
   .speed button.active { background: var(--paper); color: var(--ink); border-color: var(--paper); }
   .controls .hintText { color: rgba(254,254,254,0.55); font-size: 12px; }
+  .reactions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .rbtn {
+    font: inherit; font-size: 15px; background: var(--paper); border: 1px solid var(--line);
+    border-radius: 999px; padding: 6px 13px; cursor: pointer; line-height: 1;
+    transition: transform 0.1s;
+  }
+  .rbtn:hover { border-color: var(--ink-soft); transform: scale(1.06); }
+  .rbtn.mine { background: var(--accent-soft); border-color: var(--ink-soft); }
+  .rbtn .n { color: var(--muted); font-size: 12px; margin-left: 5px; font-variant-numeric: tabular-nums; }
   section { margin-top: 32px; }
   h2 { font-weight: 500; font-size: 15px; margin-bottom: 12px; }
   h2 .count { color: var(--muted); font-weight: 400; }
@@ -134,6 +143,8 @@
         <div class="speed" id="speed"></div>
       </div>
     </div>
+
+    <div class="reactions" id="reactions"></div>
 
     <section>
       <h2>Kommentare <span class="count" id="cCount"></span></h2>
@@ -239,6 +250,7 @@ function render(d) {
   });
 
   renderComments(d.comments || []);
+  renderReactions(d.reactions || {});
 
   if (d.summary || d.transcript) {
     $("aiSection").hidden = false;
@@ -246,6 +258,33 @@ function render(d) {
     if (d.transcript) { $("transcriptBox").hidden = false; $("transcriptText").textContent = d.transcript; }
   }
   show("main");
+}
+
+const EMOJIS = ["👍", "❤️", "😂", "🎉", "👀"];
+let reactionCounts = {};
+
+function renderReactions(counts) {
+  reactionCounts = { ...counts };
+  const box = $("reactions");
+  box.innerHTML = "";
+  EMOJIS.forEach((e) => {
+    const b = document.createElement("button");
+    b.className = "rbtn";
+    let mine = false;
+    try { mine = !!localStorage.getItem("clip-react-" + SLUG + "-" + e); } catch {}
+    if (mine) b.classList.add("mine");
+    const n = reactionCounts[e] || 0;
+    b.innerHTML = e + (n ? '<span class="n">' + n + "</span>" : "");
+    b.addEventListener("click", async () => {
+      if (b.classList.contains("mine")) return;
+      b.classList.add("mine");
+      reactionCounts[e] = (reactionCounts[e] || 0) + 1;
+      b.innerHTML = e + '<span class="n">' + reactionCounts[e] + "</span>";
+      try { localStorage.setItem("clip-react-" + SLUG + "-" + e, "1"); } catch {}
+      await api("/react", { slug: SLUG, emoji: e });
+    });
+    box.appendChild(b);
+  });
 }
 
 function renderComments(list) {

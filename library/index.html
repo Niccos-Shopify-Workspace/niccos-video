@@ -294,7 +294,8 @@ function render() {
     meta.innerHTML =
       "<span>" + fmtDate(v.createdAt) + "</span>" +
       "<span>" + (v.views || 0) + (v.views === 1 ? " Aufruf" : " Aufrufe") + "</span>" +
-      "<span>" + (v.comments || 0) + (v.comments === 1 ? " Kommentar" : " Kommentare") + "</span>";
+      "<span>" + (v.comments || 0) + (v.comments === 1 ? " Kommentar" : " Kommentare") + "</span>" +
+      ((v.reactions || 0) ? "<span>" + v.reactions + " Reaktionen</span>" : "");
     body.appendChild(meta);
     card.appendChild(body);
 
