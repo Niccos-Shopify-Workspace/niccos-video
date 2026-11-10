@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>NICCOS · Video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FEFEFE; --paper-soft: #FBFAF8; --ink: #161310; --ink-soft: #4D453D;
+    --muted: #766C62; --line: #DED5C8; --line-soft: #E8DED2; --accent-soft: #E8E7E4;
+    --bronze: #8A6A3D; --danger: #B42318;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: "Manrope", -apple-system, sans-serif; background: var(--paper-soft);
+    color: var(--ink); font-size: 15px; line-height: 1.6;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 80px; }
+  header.site { display: flex; align-items: baseline; justify-content: space-between; padding: 8px 0 24px; }
+  .brand { font-weight: 600; letter-spacing: 0.02em; font-size: 15px; color: var(--ink); text-decoration: none; }
+  .brand .dot { color: var(--bronze); }
+  .kicker { text-transform: uppercase; letter-spacing: 0.18em; font-size: 10px; color: var(--muted); }
+  h1 { font-weight: 400; font-size: 26px; letter-spacing: -0.01em; line-height: 1.25; margin: 4px 0 6px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .player {
+    background: var(--ink); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 10px 40px rgba(22,19,16,0.12);
+  }
+  video { display: block; width: 100%; max-height: 72vh; background: #000; }
+  .controls { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--ink); }
+  .speed { margin-left: auto; display: flex; gap: 4px; }
+  .speed button {
+    border: 1px solid rgba(254,254,254,0.25); background: transparent; color: var(--paper);
+    font: inherit; font-size: 12px; border-radius: 6px; padding: 3px 9px; cursor: pointer;
+  }
+  .speed button.active { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .controls .hintText { color: rgba(254,254,254,0.55); font-size: 12px; }
+  section { margin-top: 32px; }
+  h2 { font-weight: 500; font-size: 15px; margin-bottom: 12px; }
+  h2 .count { color: var(--muted); font-weight: 400; }
+  .card { background: var(--paper); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px 18px; }
+  .comment { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+  .comment:last-child { border-bottom: 0; }
+  .avatar {
+    flex: 0 0 34px; height: 34px; border-radius: 50%; background: var(--accent-soft);
+    color: var(--ink-soft); display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+  }
+  .c-head { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .c-head b { color: var(--ink); font-weight: 600; }
+  .tchip {
+    background: var(--accent-soft); color: var(--ink-soft); border: 0; cursor: pointer;
+    font: inherit; font-size: 11px; font-variant-numeric: tabular-nums;
+    border-radius: 999px; padding: 1px 8px;
+  }
+  .tchip:hover { background: var(--line-soft); }
+  .c-body { font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  form .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  input[type=text], input[type=password], textarea {
+    font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 8px;
+    padding: 9px 12px; background: var(--paper); color: var(--ink); width: 100%;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--ink-soft); }
+  textarea { resize: vertical; min-height: 72px; margin-top: 10px; }
+  .name-in { max-width: 240px; }
+  .form-foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+  .ts-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .btn {
+    border: 0; border-radius: 8px; background: var(--ink); color: var(--paper);
+    font: inherit; font-size: 14px; padding: 9px 20px; cursor: pointer; margin-left: auto;
+  }
+  .btn:hover { background: #2A2520; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  details { border-top: 1px solid var(--line-soft); padding: 14px 0; }
+  details summary { cursor: pointer; font-weight: 500; font-size: 14px; color: var(--ink-soft); }
+  details .content { margin-top: 10px; font-size: 14px; color: var(--ink-soft); white-space: pre-wrap; }
+  .state { text-align: center; padding: 80px 20px; color: var(--muted); }
+  .state h1 { font-size: 22px; color: var(--ink); }
+  .spinner {
+    width: 26px; height: 26px; margin: 0 auto 18px; border-radius: 50%;
+    border: 2px solid var(--line); border-top-color: var(--ink); animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pwbox { max-width: 360px; margin: 0 auto; text-align: left; }
+  .pwbox .btn { width: 100%; margin-top: 10px; margin-left: 0; }
+  .err { color: var(--danger); font-size: 13px; margin-top: 8px; }
+  footer.site { margin-top: 56px; color: var(--muted); font-size: 12px; text-align: center; }
+  footer.site a { color: var(--muted); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <a class="brand" href="https://www.niccos.com" target="_blank" rel="noopener">NICCOS<span class="dot">&thinsp;◉</span></a>
+    <span class="kicker">Video</span>
+  </header>
+
+  <div id="loading" class="state"><div class="spinner"></div>Video wird geladen …</div>
+
+  <div id="uploading" class="state" hidden>
+    <div class="spinner"></div>
+    <h1 id="upTitle"></h1>
+    <p>Das Video wird gerade hochgeladen. Die Seite aktualisiert sich automatisch.</p>
+  </div>
+
+  <div id="gone" class="state" hidden>
+    <h1>Dieses Video ist nicht mehr verfügbar</h1>
+    <p>Der Link ist abgelaufen oder wurde entfernt.</p>
+  </div>
+
+  <div id="pwgate" class="state" hidden>
+    <div class="pwbox">
+      <h1>Geschütztes Video</h1>
+      <p style="margin:8px 0 16px">Bitte Passwort eingeben, um das Video anzusehen.</p>
+      <input type="password" id="pwInput" placeholder="Passwort">
+      <div class="err" id="pwErr" hidden>Das Passwort stimmt nicht.</div>
+      <button class="btn" id="pwBtn">Ansehen</button>
+    </div>
+  </div>
+
+  <div id="main" hidden>
+    <div class="kicker" id="dateLine"></div>
+    <h1 id="title"></h1>
+    <div class="meta" id="metaLine"></div>
+
+    <div class="player">
+      <video id="video" controls playsinline preload="metadata"></video>
+      <div class="controls">
+        <span class="hintText">Tempo</span>
+        <div class="speed" id="speed"></div>
+      </div>
+    </div>
+
+    <section>
+      <h2>Kommentare <span class="count" id="cCount"></span></h2>
+      <div class="card">
+        <div id="comments"></div>
+        <div id="noComments" style="color:var(--muted);font-size:14px">Noch keine Kommentare – schreib den ersten.</div>
+        <form id="cForm" style="margin-top:16px">
+          <div class="row"><input type="text" id="cName" class="name-in" placeholder="Dein Name" maxlength="60" required></div>
+          <textarea id="cBody" placeholder="Kommentar schreiben …" maxlength="2000" required></textarea>
+          <div class="form-foot">
+            <label class="ts-check"><input type="checkbox" id="cTs" checked> Zeitmarke bei <span id="cTsVal">0:00</span></label>
+            <button class="btn" id="cSend" type="submit">Senden</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="aiSection" hidden>
+      <div class="card">
+        <details id="summaryBox" hidden><summary>Zusammenfassung</summary><div class="content" id="summaryText"></div></details>
+        <details id="transcriptBox" hidden><summary>Transkript</summary><div class="content" id="transcriptText"></div></details>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site">Bereitgestellt von <a href="https://www.niccos.com" target="_blank" rel="noopener">NICCOS</a> – Deine Shopify Agentur für Wechsel und Wachstum</footer>
+</div>
+
+<script>
+const API = "https://jczmvbflyrehpywngnro.supabase.co/functions/v1/clip";
+const SLUG = (location.pathname.match(/\/s\/([a-z0-9]+)/i) || [])[1]
+  || new URLSearchParams(location.search).get("v") || "";
+const $ = (id) => document.getElementById(id);
+let currentPassword = "";
+
+function fmtTime(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  const m = Math.floor(s / 60), r = s % 60;
+  return m + ":" + String(r).padStart(2, "0");
+}
+function fmtDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" });
+  } catch { return ""; }
+}
+function esc(s) {
+  const d = document.createElement("div"); d.textContent = s; return d.innerHTML;
+}
+function show(id) {
+  ["loading","uploading","gone","pwgate","main"].forEach((x) => $(x).hidden = x !== id);
+}
+
+async function api(path, body) {
+  const res = await fetch(API + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return { status: res.status, data: await res.json().catch(() => ({})) };
+}
+
+async function load() {
+  if (!SLUG) { show("gone"); return; }
+  const { status, data } = await api("/watch", { slug: SLUG, password: currentPassword });
+  if (status === 404 || status === 410) { show("gone"); return; }
+  if (data.needPassword) {
+    $("pwErr").hidden = !(status === 403);
+    show("pwgate");
+    return;
+  }
+  if (data.uploading) {
+    $("upTitle").textContent = data.title || "";
+    show("uploading");
+    setTimeout(load, 5000);
+    return;
+  }
+  if (status !== 200) { show("gone"); return; }
+  render(data);
+}
+
+function render(d) {
+  document.title = d.title + " · NICCOS";
+  $("title").textContent = d.title;
+  $("dateLine").textContent = fmtDate(d.createdAt);
+  const parts = [];
+  if (d.durationSec) parts.push(fmtTime(d.durationSec) + " Min.");
+  parts.push(d.views + (d.views === 1 ? " Aufruf" : " Aufrufe"));
+  $("metaLine").textContent = parts.join(" · ");
+  $("video").src = d.videoUrl;
+
+  const speeds = [0.75, 1, 1.25, 1.5, 2];
+  $("speed").innerHTML = "";
+  speeds.forEach((s) => {
+    const b = document.createElement("button");
+    b.textContent = s === 1 ? "1×" : s.toString().replace(".", ",") + "×";
+    b.className = s === 1 ? "active" : "";
+    b.addEventListener("click", () => {
+      $("video").playbackRate = s;
+      $("speed").querySelectorAll("button").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+    });
+    $("speed").appendChild(b);
+  });
+
+  renderComments(d.comments || []);
+
+  if (d.summary || d.transcript) {
+    $("aiSection").hidden = false;
+    if (d.summary) { $("summaryBox").hidden = false; $("summaryText").textContent = d.summary; }
+    if (d.transcript) { $("transcriptBox").hidden = false; $("transcriptText").textContent = d.transcript; }
+  }
+  show("main");
+}
+
+function renderComments(list) {
+  const box = $("comments");
+  box.innerHTML = "";
+  $("noComments").hidden = list.length > 0;
+  $("cCount").textContent = list.length ? "(" + list.length + ")" : "";
+  list.forEach((c) => appendCommentEl(c, box));
+}
+
+function appendCommentEl(c, box) {
+  const el = document.createElement("div");
+  el.className = "comment";
+  const initial = (c.author || "?").trim().charAt(0).toUpperCase();
+  const chip = c.time_sec != null
+    ? '<button class="tchip" data-t="' + Number(c.time_sec) + '">' + fmtTime(Number(c.time_sec)) + "</button>"
+    : "";
+  el.innerHTML =
+    '<div class="avatar">' + esc(initial) + "</div>" +
+    '<div style="flex:1"><div class="c-head"><b>' + esc(c.author) + "</b>" + chip +
+    "<span>" + fmtDate(c.created_at) + '</span></div><div class="c-body">' + esc(c.body) + "</div></div>";
+  box.appendChild(el);
+  el.querySelector(".tchip")?.addEventListener("click", () => {
+    const v = $("video");
+    v.currentTime = Number(el.querySelector(".tchip").dataset.t);
+    v.play();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
+setInterval(() => {
+  const v = $("video");
+  if (v && !v.paused) $("cTsVal").textContent = fmtTime(v.currentTime);
+}, 500);
+$("video")?.addEventListener("pause", () => { $("cTsVal").textContent = fmtTime($("video").currentTime); });
+
+try { $("cName").value = localStorage.getItem("niccos-clip-name") || ""; } catch {}
+
+$("cForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const author = $("cName").value.trim();
+  const body = $("cBody").value.trim();
+  if (!author || !body) return;
+  $("cSend").disabled = true;
+  try { localStorage.setItem("niccos-clip-name", author); } catch {}
+  const timeSec = $("cTs").checked ? Math.floor($("video").currentTime) : null;
+  const { status, data } = await api("/comment", { slug: SLUG, author, body, timeSec });
+  $("cSend").disabled = false;
+  if (status === 200 && data.comment) {
+    $("cBody").value = "";
+    appendCommentEl(data.comment, $("comments"));
+    $("noComments").hidden = true;
+    $("cCount").textContent = "(" + document.querySelectorAll("#comments .comment").length + ")";
+  }
+});
+
+$("pwBtn").addEventListener("click", () => {
+  currentPassword = $("pwInput").value;
+  show("loading");
+  load();
+});
+$("pwInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pwBtn").click(); });
+
+load();
+</script>
+</body>
+</html>
