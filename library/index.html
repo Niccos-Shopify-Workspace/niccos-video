@@ -27,7 +27,18 @@
   }
   .pagename { color: var(--muted); margin-left: 6px; font-size: 13px; }
   .kicker { text-transform: uppercase; letter-spacing: 0.16em; font-size: 10.5px; color: var(--muted); font-weight: 600; }
-  h1 { font-weight: 500; font-size: 30px; letter-spacing: -0.02em; margin: 2px 0 20px; }
+  .headrow { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 2px 0 20px; }
+  h1 { font-weight: 500; font-size: 30px; letter-spacing: -0.02em; }
+  .headbtns { display: flex; gap: 10px; position: relative; }
+  .hbtn {
+    font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; padding: 9px 18px;
+    background: var(--paper); color: var(--ink-soft); display: inline-flex; align-items: center; gap: 7px;
+  }
+  .hbtn:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--hover); }
+  .hbtn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .hbtn.primary:hover { background: #32302B; }
+  .hbtn svg { width: 14px; height: 14px; }
   .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
   .toolbar input[type=search] {
     flex: 1; min-width: 220px; max-width: 420px; font: inherit; font-size: 13.5px;
@@ -48,6 +59,21 @@
     padding: 9px 12px; background: var(--paper); color: var(--ink); cursor: pointer;
   }
   #count { margin-left: auto; color: var(--muted); font-size: 13px; }
+  .selbar {
+    position: sticky; top: 10px; z-index: 30;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--ink); color: var(--paper); border-radius: 12px;
+    padding: 10px 16px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(26,25,21,0.25);
+  }
+  .selbar b { font-size: 13.5px; font-weight: 600; margin-right: 6px; }
+  .selbar button {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    border: 1px solid rgba(252,252,251,0.3); background: transparent; color: var(--paper);
+    border-radius: 999px; padding: 6px 14px;
+  }
+  .selbar button:hover { background: rgba(252,252,251,0.14); }
+  .selbar button.sdanger { border-color: rgba(255,120,100,0.6); color: #FFB4A6; }
+  .selbar .spacer { flex: 1; }
   .grid {
     display: grid; gap: 18px;
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -55,9 +81,10 @@
   .card {
     background: var(--paper); border: 1px solid var(--line-soft); border-radius: 14px;
     overflow: hidden; display: flex; flex-direction: column;
-    transition: box-shadow 0.15s, transform 0.15s;
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
   }
   .card:hover { box-shadow: 0 8px 28px rgba(26,25,21,0.1); transform: translateY(-1px); }
+  .card.selected { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
   .thumbwrap { position: relative; aspect-ratio: 16/10; background: var(--accent-soft); cursor: pointer; }
   .thumbwrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumbwrap .noimg {
@@ -69,14 +96,34 @@
     color: var(--paper); font-size: 11.5px; font-variant-numeric: tabular-nums;
     border-radius: 6px; padding: 2px 7px;
   }
-  .badges { position: absolute; left: 8px; top: 8px; display: flex; gap: 5px; }
+  .badges { position: absolute; left: 8px; bottom: 8px; display: flex; gap: 5px; }
   .badge {
     font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 2px 8px;
     background: rgba(252,252,251,0.92); color: var(--ink-soft);
   }
   .badge.schutz { color: var(--bronze); }
   .badge.up { color: var(--danger); }
-  .cbody { padding: 12px 14px 10px; flex: 1; display: flex; flex-direction: column; }
+  .selbox {
+    position: absolute; left: 8px; top: 8px; width: 22px; height: 22px;
+    border-radius: 7px; border: 1.5px solid rgba(252,252,251,0.9);
+    background: rgba(26,25,21,0.35); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent; opacity: 0; transition: opacity 0.12s;
+  }
+  .thumbwrap:hover .selbox, .selbox.on, .grid.selecting .selbox { opacity: 1; }
+  .selbox.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .selbox svg { width: 13px; height: 13px; }
+  .hoveracts { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 6px; opacity: 0; transition: opacity 0.12s; }
+  .thumbwrap:hover .hoveracts, .hoveracts.open { opacity: 1; }
+  .iconbtn {
+    width: 30px; height: 30px; border-radius: 9px; border: 0; cursor: pointer;
+    background: rgba(252,252,251,0.95); color: var(--ink-soft);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(26,25,21,0.18);
+  }
+  .iconbtn:hover { color: var(--ink); background: var(--paper); }
+  .iconbtn svg { width: 15px; height: 15px; }
+  .cbody { padding: 12px 14px 12px; flex: 1; display: flex; flex-direction: column; }
   .title {
     font-size: 14px; font-weight: 600; color: var(--ink); width: 100%;
     border: 1px solid transparent; border-radius: 7px; padding: 3px 6px; margin-left: -6px;
@@ -84,16 +131,31 @@
   }
   .title:hover { border-color: var(--line-soft); }
   .title:focus { outline: none; border-color: var(--ink-soft); background: var(--paper-soft); }
-  .meta { color: var(--muted); font-size: 12px; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .cfoot { display: flex; gap: 6px; padding: 10px 14px 13px; flex-wrap: wrap; }
-  .cfoot button {
-    font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--paper);
-    color: var(--ink-soft); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  .meta { color: var(--muted); font-size: 12px; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .stats { display: flex; gap: 16px; padding: 0 14px 13px; color: var(--muted); font-size: 12.5px; }
+  .stats span { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+  .stats svg { width: 15px; height: 15px; opacity: 0.75; }
+  .menu {
+    position: fixed; z-index: 60; min-width: 210px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 14px 40px rgba(26,25,21,0.18); padding: 6px;
   }
-  .cfoot button:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--hover); }
-  .cfoot button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .cfoot button.primary:hover { background: #32302B; }
-  .cfoot button.danger:hover { border-color: var(--danger); color: var(--danger); background: var(--paper); }
+  .menu button {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    font: inherit; font-size: 13.5px; border: 0; background: transparent; color: var(--ink);
+    border-radius: 8px; padding: 9px 11px; cursor: pointer; text-align: left;
+  }
+  .menu button:hover { background: var(--hover); }
+  .menu button.danger { color: var(--danger); }
+  .menu button svg { width: 15px; height: 15px; color: var(--muted); flex: 0 0 15px; }
+  .menu button.danger svg { color: var(--danger); }
+  .menu hr { border: 0; border-top: 1px solid var(--line-soft); margin: 5px 4px; }
+  .newmenu { position: absolute; right: 0; top: calc(100% + 8px); }
+  .newmenu .hint { color: var(--muted); font-size: 12px; padding: 8px 11px 6px; }
+  .newmenu kbd {
+    font-family: inherit; font-size: 11px; background: var(--active); border-radius: 5px;
+    padding: 1px 6px; color: var(--ink-soft);
+  }
   .state { text-align: center; padding: 100px 20px; color: var(--muted); }
   .state h2 { color: var(--ink); font-weight: 500; font-size: 20px; margin-bottom: 8px; }
   .gate { max-width: 380px; margin: 60px auto; background: var(--paper); border: 1px solid var(--line-soft); border-radius: 16px; padding: 28px; }
@@ -116,7 +178,7 @@
   dialog h3 { font-weight: 600; font-size: 15px; margin-bottom: 16px; }
   .frow { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
   .frow label { flex: 0 0 95px; color: var(--muted); font-size: 12.5px; }
-  .frow input {
+  .frow input, .frow select {
     font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 8px;
     padding: 7px 10px; background: var(--paper-soft); color: var(--ink); flex: 1;
   }
@@ -130,7 +192,7 @@
   #toast {
     position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
     background: var(--ink); color: var(--paper); border-radius: 10px; padding: 10px 20px;
-    font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 50;
+    font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 70;
   }
   #toast.on { opacity: 1; }
   [hidden] { display: none !important; }
@@ -154,7 +216,29 @@
 
   <div id="main" hidden>
     <div class="kicker">Bibliothek</div>
-    <h1>Videos</h1>
+    <div class="headrow">
+      <h1>Videos</h1>
+      <div class="headbtns">
+        <button class="hbtn" id="newFolder" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6M9 13h6"/></svg>
+          Neuer Ordner
+        </button>
+        <button class="hbtn primary" id="newVideo" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.2 3.1a.5.5 0 0 0 .8-.4V8.3a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+          Neues Video
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="menu newmenu" id="newMenu" hidden>
+          <button id="uploadBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0 4 4m-4-4L8 8"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Video hochladen …
+          </button>
+          <hr>
+          <div class="hint">Aufnehmen: in der App mit <kbd>⇧⌘L</kbd></div>
+        </div>
+        <input type="file" id="fileIn" accept="video/mp4,video/quicktime,video/webm" hidden>
+      </div>
+    </div>
     <div class="tabs">
       <button data-tab="videos" class="active">Videos</button>
       <button data-tab="archive">Archiv</button>
@@ -175,8 +259,16 @@
       <select id="folderSel"><option value="">Alle Ordner</option></select>
       <span id="count"></span>
     </div>
+    <div class="selbar" id="selbar" hidden>
+      <b id="selCount"></b>
+      <button id="selArchive" type="button">Archivieren</button>
+      <button id="selMove" type="button">In Ordner verschieben</button>
+      <button class="sdanger" id="selDelete" type="button">Löschen</button>
+      <span class="spacer"></span>
+      <button id="selClear" type="button">Auswahl aufheben</button>
+    </div>
     <div class="grid" id="grid"></div>
-    <div class="state" id="empty" hidden><h2>Keine Videos</h2><p>Nimm den ersten Clip mit ⇧⌘L auf.</p></div>
+    <div class="state" id="empty" hidden><h2>Keine Videos</h2><p>Nimm den ersten Clip mit ⇧⌘L auf – oder lade ein Video hoch.</p></div>
   </div>
 
   <div id="loading" class="state"><p>Lade …</p></div>
@@ -193,6 +285,17 @@
   </div>
 </dialog>
 
+<dialog id="moveDlg">
+  <h3>In Ordner verschieben</h3>
+  <div class="frow"><label>Ordner</label><select id="moveSel"></select></div>
+  <div class="frow"><label>Neuer Ordner</label><input id="moveNew" type="text" placeholder="oder neuen Namen eingeben"></div>
+  <div class="dlg-foot">
+    <button id="moveCancel">Abbrechen</button>
+    <button class="primary" id="moveGo">Verschieben</button>
+  </div>
+</dialog>
+
+<div class="menu" id="cardMenu" hidden></div>
 <div id="toast"></div>
 
 <script>
@@ -202,8 +305,28 @@ let TOKEN = "";
 let videos = [];
 let activeId = null;
 let tab = "videos";
+let selected = new Set();
+let moveIds = [];
+let extraFolders = [];
 
 try { TOKEN = localStorage.getItem("clip-token") || ""; } catch {}
+try { extraFolders = JSON.parse(localStorage.getItem("clip-folders") || "[]"); } catch {}
+
+const ICONS = {
+  open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
+  rename: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.7 9a.6.6 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1Z"/></svg>',
+  archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
+  dots: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>',
+  smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>',
+};
 
 function fmtTime(s) {
   s = Math.max(0, Math.floor(s || 0));
@@ -245,16 +368,21 @@ async function load() {
     return;
   }
   videos = data.videos || [];
+  selected = new Set([...selected].filter((id) => videos.some((v) => v.videoId === id)));
   render();
   show("main");
+}
+
+function allFolders() {
+  const fromVideos = videos.map((v) => v.folder).filter(Boolean);
+  return [...new Set([...fromVideos, ...extraFolders])].sort((a, b) => a.localeCompare(b, "de"));
 }
 
 function updateFolderOptions() {
   const sel = $("folderSel");
   const current = sel.value;
-  const folders = [...new Set(videos.map((v) => v.folder).filter(Boolean))].sort();
   sel.innerHTML = '<option value="">Alle Ordner</option>' +
-    folders.map((f) => '<option value="' + f.replace(/"/g, "&quot;") + '">' + f.replace(/</g, "&lt;") + "</option>").join("");
+    allFolders().map((f) => '<option value="' + f.replace(/"/g, "&quot;") + '">📁 ' + f.replace(/</g, "&lt;") + "</option>").join("");
   if ([...sel.options].some((o) => o.value === current)) sel.value = current;
 }
 
@@ -277,17 +405,36 @@ function visible() {
   return list;
 }
 
+function updateSelbar() {
+  const n = selected.size;
+  $("selbar").hidden = n === 0;
+  $("grid").classList.toggle("selecting", n > 0);
+  if (n) $("selCount").textContent = n + " ausgewählt";
+}
+
+function toggleSelect(v, card, box) {
+  if (selected.has(v.videoId)) selected.delete(v.videoId);
+  else selected.add(v.videoId);
+  const on = selected.has(v.videoId);
+  box.classList.toggle("on", on);
+  box.innerHTML = on ? ICONS.check : "";
+  card.classList.toggle("selected", on);
+  updateSelbar();
+}
+
 function render() {
   updateFolderOptions();
+  closeMenu();
   const list = visible();
   const grid = $("grid");
   grid.innerHTML = "";
   $("empty").hidden = list.length > 0;
   $("count").textContent = list.length + (list.length === 1 ? " Video" : " Videos");
+  updateSelbar();
 
   list.forEach((v) => {
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "card" + (selected.has(v.videoId) ? " selected" : "");
 
     const tw = document.createElement("div");
     tw.className = "thumbwrap";
@@ -299,7 +446,41 @@ function render() {
     if (v.hasPassword || v.expiresAt) badges.push('<span class="badge schutz">Geschützt</span>');
     if (!v.uploaded) badges.push('<span class="badge up">Upload läuft</span>');
     if (badges.length) tw.innerHTML += '<div class="badges">' + badges.join("") + "</div>";
-    tw.addEventListener("click", () => window.open(v.shareUrl, "_blank"));
+
+    const box = document.createElement("button");
+    box.className = "selbox" + (selected.has(v.videoId) ? " on" : "");
+    box.type = "button";
+    box.title = "Auswählen";
+    box.innerHTML = selected.has(v.videoId) ? ICONS.check : "";
+    box.addEventListener("click", (e) => { e.stopPropagation(); toggleSelect(v, card, box); });
+    tw.appendChild(box);
+
+    const acts = document.createElement("div");
+    acts.className = "hoveracts";
+    const linkBtn = document.createElement("button");
+    linkBtn.className = "iconbtn";
+    linkBtn.type = "button";
+    linkBtn.title = "Link kopieren";
+    linkBtn.innerHTML = ICONS.link;
+    linkBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      try { await navigator.clipboard.writeText(v.shareUrl); toast("Link kopiert"); }
+      catch { prompt("Link:", v.shareUrl); }
+    });
+    const dotsBtn = document.createElement("button");
+    dotsBtn.className = "iconbtn";
+    dotsBtn.type = "button";
+    dotsBtn.title = "Mehr";
+    dotsBtn.innerHTML = ICONS.dots;
+    dotsBtn.addEventListener("click", (e) => { e.stopPropagation(); openMenu(v, dotsBtn, acts, title); });
+    acts.appendChild(linkBtn);
+    acts.appendChild(dotsBtn);
+    tw.appendChild(acts);
+
+    tw.addEventListener("click", () => {
+      if (selected.size) { toggleSelect(v, card, box); return; }
+      window.open(v.shareUrl, "_blank");
+    });
     card.appendChild(tw);
 
     const body = document.createElement("div");
@@ -320,49 +501,243 @@ function render() {
     meta.className = "meta";
     meta.innerHTML =
       "<span>" + fmtDate(v.createdAt) + "</span>" +
-      "<span>" + (v.views || 0) + (v.views === 1 ? " Aufruf" : " Aufrufe") + "</span>" +
-      "<span>" + (v.comments || 0) + (v.comments === 1 ? " Kommentar" : " Kommentare") + "</span>" +
-      ((v.reactions || 0) ? "<span>" + v.reactions + " Reaktionen</span>" : "") +
       (v.folder ? "<span>📁 " + String(v.folder).replace(/</g, "&lt;") + "</span>" : "");
     body.appendChild(meta);
     card.appendChild(body);
 
-    const foot = document.createElement("div");
-    foot.className = "cfoot";
-    const btn = (label, cls, fn) => {
-      const b = document.createElement("button");
-      b.textContent = label;
-      if (cls) b.className = cls;
-      b.addEventListener("click", fn);
-      foot.appendChild(b);
-    };
-    btn("Link kopieren", "primary", async () => {
-      try { await navigator.clipboard.writeText(v.shareUrl); toast("Link kopiert"); }
-      catch { prompt("Link:", v.shareUrl); }
-    });
-    btn("Öffnen", "", () => window.open(v.shareUrl, "_blank"));
-    btn("Schutz", "", () => openProtect(v));
-    btn("Ordner", "", async () => {
-      const name = prompt("Ordnername (leer = kein Ordner):", v.folder || "");
-      if (name === null) return;
-      const res = await api("/configure", { videoId: v.videoId, folder: name.trim() || null });
-      if (res.status === 200) { v.folder = name.trim() || null; render(); toast(v.folder ? "In Ordner „" + v.folder + "" + "“ verschoben" : "Aus Ordner entfernt"); }
-    });
-    btn(v.archived ? "Wiederherstellen" : "Archivieren", "", async () => {
-      const res = await api("/configure", { videoId: v.videoId, archived: !v.archived });
-      if (res.status === 200) { v.archived = !v.archived; render(); toast(v.archived ? "Archiviert" : "Wiederhergestellt"); }
-    });
-    btn("Löschen", "danger", async () => {
-      if (!confirm('„' + (v.title || "Clip") + '" löschen?\n\nDer Link wird deaktiviert und die Online-Kopie entfernt. Die lokale Datei auf dem Mac bleibt erhalten.')) return;
-      const res = await api("/delete", { videoId: v.videoId });
-      if (res.status === 200) { videos = videos.filter((x) => x.videoId !== v.videoId); render(); toast("Gelöscht"); }
-      else alert(res.data.error || "Fehler");
-    });
-    card.appendChild(foot);
+    const stats = document.createElement("div");
+    stats.className = "stats";
+    stats.innerHTML =
+      "<span title='Aufrufe'>" + ICONS.eye + (v.views || 0) + "</span>" +
+      "<span title='Kommentare'>" + ICONS.comment + (v.comments || 0) + "</span>" +
+      "<span title='Reaktionen'>" + ICONS.smile + (v.reactions || 0) + "</span>";
+    card.appendChild(stats);
 
     grid.appendChild(card);
   });
 }
+
+// ---------- 3-Punkte-Menü ----------
+
+function closeMenu() {
+  $("cardMenu").hidden = true;
+  document.querySelectorAll(".hoveracts.open").forEach((x) => x.classList.remove("open"));
+}
+
+function openMenu(v, anchor, acts, titleInput) {
+  const m = $("cardMenu");
+  m.innerHTML = "";
+  const item = (icon, label, fn, cls) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    if (cls) b.className = cls;
+    b.innerHTML = icon + "<span>" + label + "</span>";
+    b.addEventListener("click", () => { closeMenu(); fn(); });
+    m.appendChild(b);
+  };
+  item(ICONS.open, "Öffnen", () => window.open(v.shareUrl, "_blank"));
+  item(ICONS.link, "Link kopieren", async () => {
+    try { await navigator.clipboard.writeText(v.shareUrl); toast("Link kopiert"); }
+    catch { prompt("Link:", v.shareUrl); }
+  });
+  item(ICONS.rename, "Umbenennen", () => { titleInput.focus(); titleInput.select(); });
+  item(ICONS.folder, "In Ordner verschieben", () => openMove([v.videoId], v.folder));
+  item(ICONS.shield, "Link-Schutz", () => openProtect(v));
+  item(ICONS.archive, v.archived ? "Wiederherstellen" : "Archivieren", async () => {
+    const res = await api("/configure", { videoId: v.videoId, archived: !v.archived });
+    if (res.status === 200) { v.archived = !v.archived; render(); toast(v.archived ? "Archiviert" : "Wiederhergestellt"); }
+  });
+  item(ICONS.download, "Herunterladen", async () => {
+    toast("Download wird vorbereitet …");
+    const res = await api("/videourl", { videoId: v.videoId });
+    if (res.status === 200 && res.data.downloadUrl) {
+      const a = document.createElement("a");
+      a.href = res.data.downloadUrl;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } else toast("Download nicht möglich");
+  });
+  m.appendChild(document.createElement("hr"));
+  item(ICONS.trash, "Löschen", async () => {
+    if (!confirm('„' + (v.title || "Clip") + '" löschen?\n\nDer Link wird deaktiviert und die Online-Kopie entfernt. Die lokale Datei auf dem Mac bleibt erhalten.')) return;
+    const res = await api("/delete", { videoId: v.videoId });
+    if (res.status === 200) { videos = videos.filter((x) => x.videoId !== v.videoId); selected.delete(v.videoId); render(); toast("Gelöscht"); }
+    else alert(res.data.error || "Fehler");
+  }, "danger");
+
+  m.hidden = false;
+  acts.classList.add("open");
+  const r = anchor.getBoundingClientRect();
+  const mw = m.offsetWidth, mh = m.offsetHeight;
+  let x = Math.min(r.right - mw + 8, window.innerWidth - mw - 10);
+  let y = r.bottom + 6;
+  if (y + mh > window.innerHeight - 10) y = Math.max(10, r.top - mh - 6);
+  m.style.left = Math.max(10, x) + "px";
+  m.style.top = y + "px";
+}
+
+document.addEventListener("click", (e) => {
+  if (!$("cardMenu").hidden && !$("cardMenu").contains(e.target)) closeMenu();
+  if (!$("newMenu").hidden && !$("newMenu").contains(e.target) && e.target.closest("#newVideo") === null) $("newMenu").hidden = true;
+});
+window.addEventListener("scroll", closeMenu, { passive: true });
+window.addEventListener("resize", closeMenu, { passive: true });
+
+// ---------- Auswahl-Leiste ----------
+
+$("selClear").addEventListener("click", () => { selected.clear(); render(); });
+$("selDelete").addEventListener("click", async () => {
+  const ids = [...selected];
+  if (!ids.length) return;
+  if (!confirm(ids.length + (ids.length === 1 ? " Video" : " Videos") + " löschen?\n\nDie Links werden deaktiviert und die Online-Kopien entfernt. Lokale Dateien auf dem Mac bleiben erhalten.")) return;
+  toast("Lösche …");
+  for (const id of ids) {
+    const res = await api("/delete", { videoId: id });
+    if (res.status === 200) { videos = videos.filter((x) => x.videoId !== id); selected.delete(id); }
+  }
+  render();
+  toast(ids.length + (ids.length === 1 ? " Video gelöscht" : " Videos gelöscht"));
+});
+$("selArchive").addEventListener("click", async () => {
+  const ids = [...selected];
+  const toArchive = tab !== "archive";
+  for (const id of ids) {
+    const res = await api("/configure", { videoId: id, archived: toArchive });
+    if (res.status === 200) { const v = videos.find((x) => x.videoId === id); if (v) v.archived = toArchive; }
+  }
+  selected.clear();
+  render();
+  toast(toArchive ? "Archiviert" : "Wiederhergestellt");
+});
+$("selMove").addEventListener("click", () => openMove([...selected], null));
+
+// ---------- Verschieben-Dialog ----------
+
+function openMove(ids, currentFolder) {
+  moveIds = ids;
+  const sel = $("moveSel");
+  sel.innerHTML = '<option value="">Kein Ordner</option>' +
+    allFolders().map((f) => '<option value="' + f.replace(/"/g, "&quot;") + '"' + (f === currentFolder ? " selected" : "") + ">📁 " + f.replace(/</g, "&lt;") + "</option>").join("");
+  $("moveNew").value = "";
+  $("moveDlg").showModal();
+}
+$("moveCancel").addEventListener("click", () => $("moveDlg").close());
+$("moveGo").addEventListener("click", async () => {
+  const name = $("moveNew").value.trim() || $("moveSel").value || null;
+  for (const id of moveIds) {
+    const res = await api("/configure", { videoId: id, folder: name });
+    if (res.status === 200) { const v = videos.find((x) => x.videoId === id); if (v) v.folder = name; }
+  }
+  if (name && !extraFolders.includes(name)) {
+    extraFolders.push(name);
+    try { localStorage.setItem("clip-folders", JSON.stringify(extraFolders)); } catch {}
+  }
+  $("moveDlg").close();
+  selected.clear();
+  render();
+  toast(name ? 'In Ordner „' + name + '“ verschoben' : "Aus Ordner entfernt");
+});
+
+// ---------- Neuer Ordner ----------
+
+$("newFolder").addEventListener("click", () => {
+  const name = prompt("Name des neuen Ordners:");
+  if (!name || !name.trim()) return;
+  const clean = name.trim().slice(0, 80);
+  if (!extraFolders.includes(clean)) {
+    extraFolders.push(clean);
+    try { localStorage.setItem("clip-folders", JSON.stringify(extraFolders)); } catch {}
+  }
+  updateFolderOptions();
+  $("folderSel").value = clean;
+  render();
+  toast('Ordner „' + clean + '“ angelegt – verschiebe Videos über das ⋯-Menü hinein');
+});
+
+// ---------- Neues Video (Web-Upload) ----------
+
+$("newVideo").addEventListener("click", (e) => {
+  e.stopPropagation();
+  $("newMenu").hidden = !$("newMenu").hidden;
+});
+$("uploadBtn").addEventListener("click", () => {
+  $("newMenu").hidden = true;
+  $("fileIn").click();
+});
+
+function readDuration(file) {
+  return new Promise((resolve) => {
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.src = URL.createObjectURL(file);
+    v.onloadedmetadata = () => { const d = v.duration; URL.revokeObjectURL(v.src); resolve(Number.isFinite(d) ? Math.round(d) : null); };
+    v.onerror = () => { URL.revokeObjectURL(v.src); resolve(null); };
+  });
+}
+
+function makeThumb(file) {
+  return new Promise((resolve) => {
+    const v = document.createElement("video");
+    v.preload = "auto";
+    v.muted = true;
+    v.src = URL.createObjectURL(file);
+    const done = (blob) => { URL.revokeObjectURL(v.src); resolve(blob); };
+    v.onloadeddata = () => { v.currentTime = Math.min(0.5, (v.duration || 1) / 2); };
+    v.onseeked = () => {
+      try {
+        const c = document.createElement("canvas");
+        const w = 480, h = Math.round(480 * (v.videoHeight / v.videoWidth)) || 300;
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(v, 0, 0, w, h);
+        c.toBlob((b) => done(b), "image/jpeg", 0.82);
+      } catch { done(null); }
+    };
+    v.onerror = () => done(null);
+    setTimeout(() => done(null), 15000);
+  });
+}
+
+function putWithProgress(url, body, contentType, onPct) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && onPct) onPct(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error("HTTP " + xhr.status));
+    xhr.onerror = () => reject(new Error("Netzwerkfehler"));
+    xhr.send(body);
+  });
+}
+
+$("fileIn").addEventListener("change", async () => {
+  const file = $("fileIn").files[0];
+  $("fileIn").value = "";
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024 * 1024) { alert("Datei ist größer als 2 GB."); return; }
+  try {
+    toast("Bereite Upload vor …");
+    const durationSec = await readDuration(file);
+    const title = file.name.replace(/\.[^.]+$/, "").slice(0, 200) || "Upload";
+    const ing = await api("/ingest", { title, durationSec, sizeBytes: file.size });
+    if (ing.status !== 200) throw new Error(ing.data.error || "Ingest fehlgeschlagen");
+    const d = ing.data;
+    await putWithProgress(d.uploadUrl, file, file.type || "video/mp4", (p) => toast("Lade hoch … " + p + " %"));
+    const thumb = await makeThumb(file);
+    if (thumb && d.thumbUploadUrl) {
+      await putWithProgress(d.thumbUploadUrl, thumb, "image/jpeg", null).catch(() => {});
+    }
+    const fin = await api("/uploaded", { videoId: d.videoId });
+    if (fin.status !== 200) throw new Error("Fertigmeldung fehlgeschlagen");
+    try { await navigator.clipboard.writeText(d.shareUrl); } catch {}
+    toast("Hochgeladen – Link kopiert");
+    await load();
+  } catch (err) {
+    alert("Upload fehlgeschlagen: " + err.message);
+  }
+});
+
+// ---------- Schutz-Dialog ----------
 
 function openProtect(v) {
   activeId = v.videoId;
@@ -402,6 +777,7 @@ document.querySelectorAll(".tabs button").forEach((b) => {
     document.querySelectorAll(".tabs button").forEach((x) => x.classList.remove("active"));
     b.classList.add("active");
     tab = b.dataset.tab;
+    selected.clear();
     render();
   });
 });
