@@ -9,9 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #FEFEFE; --paper-soft: #FBFAF8; --ink: #161310; --ink-soft: #4D453D;
-    --muted: #766C62; --line: #DED5C8; --line-soft: #E8DED2; --accent-soft: #E8E7E4;
-    --bronze: #8A6A3D; --danger: #B42318;
+    --paper: #FCFCFB; --paper-soft: #F7F6F3; --ink: #1A1915; --ink-soft: #4A4945;
+    --muted: #6F6E69; --line: #E4E2DC; --line-soft: #ECEAE5; --accent-soft: #E8E7E4;
+    --active: #ECEBE5; --bronze: #8A6A3D; --danger: #B42318;
   }
   * { box-sizing: border-box; margin: 0; }
   body {
@@ -19,9 +19,13 @@
     color: var(--ink); font-size: 15px; line-height: 1.6;
   }
   .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 80px; }
-  header.site { display: flex; align-items: baseline; justify-content: space-between; padding: 8px 0 24px; }
-  .brand { font-weight: 600; letter-spacing: 0.02em; font-size: 15px; color: var(--ink); text-decoration: none; }
-  .brand .dot { color: var(--bronze); }
+  header.site { display: flex; align-items: center; gap: 8px; padding: 8px 0 24px; }
+  .wordmark { height: 16px; display: block; }
+  .pro {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    color: var(--ink-soft); background: var(--active); border-radius: 6px; padding: 2px 7px;
+  }
+  header.site .kicker { margin-left: auto; }
   .kicker { text-transform: uppercase; letter-spacing: 0.18em; font-size: 10px; color: var(--muted); }
   h1 { font-weight: 400; font-size: 26px; letter-spacing: -0.01em; line-height: 1.25; margin: 4px 0 6px; }
   .meta { color: var(--muted); font-size: 13px; }
@@ -114,7 +118,10 @@
 <body>
 <div class="wrap">
   <header class="site">
-    <a class="brand" href="https://www.niccos.com" target="_blank" rel="noopener">NICCOS<span class="dot">&thinsp;◉</span></a>
+    <a href="https://www.niccos.com" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+      <img class="wordmark" src="/niccos-video/assets/niccos-logo-black.svg" alt="NICCOS">
+    </a>
+    <span class="pro">CLIP</span>
     <span class="kicker">Video</span>
   </header>
 

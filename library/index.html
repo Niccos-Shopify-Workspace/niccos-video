@@ -54,10 +54,16 @@
   }
   .tabs button:hover { color: var(--ink); }
   .tabs button.active { color: var(--ink); border-bottom-color: var(--ink); }
-  .toolbar select {
+  .dd { position: relative; }
+  .ddbtn {
     font: inherit; font-size: 13px; border: 1px solid var(--line); border-radius: 10px;
     padding: 9px 12px; background: var(--paper); color: var(--ink); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
   }
+  .ddbtn:hover { border-color: var(--ink-soft); }
+  .ddbtn svg { width: 11px; height: 11px; color: var(--muted); }
+  .ddmenu { position: absolute; left: 0; top: calc(100% + 6px); min-width: 100%; }
+  .ddmenu button.on { background: var(--active); font-weight: 600; }
   #count { margin-left: auto; color: var(--muted); font-size: 13px; }
   .selbar {
     position: sticky; top: 10px; z-index: 30;
@@ -245,18 +251,9 @@
     </div>
     <div class="toolbar">
       <input type="search" id="search" placeholder="Nach Titel suchen …">
-      <select id="sort">
-        <option value="new">Neueste zuerst</option>
-        <option value="old">Älteste zuerst</option>
-        <option value="views">Meiste Aufrufe</option>
-        <option value="long">Längste zuerst</option>
-      </select>
-      <select id="filter">
-        <option value="all">Alle</option>
-        <option value="protected">Geschützt</option>
-        <option value="open">Ohne Schutz</option>
-      </select>
-      <select id="folderSel"><option value="">Alle Ordner</option></select>
+      <div class="dd" id="ddSort"></div>
+      <div class="dd" id="ddFilter"></div>
+      <div class="dd" id="ddFolder"></div>
       <span id="count"></span>
     </div>
     <div class="selbar" id="selbar" hidden>
@@ -308,6 +305,7 @@ let tab = "videos";
 let selected = new Set();
 let moveIds = [];
 let extraFolders = [];
+let sortVal = "new", filterVal = "all", folderVal = "";
 
 try { TOKEN = localStorage.getItem("clip-token") || ""; } catch {}
 try { extraFolders = JSON.parse(localStorage.getItem("clip-folders") || "[]"); } catch {}
@@ -378,24 +376,77 @@ function allFolders() {
   return [...new Set([...fromVideos, ...extraFolders])].sort((a, b) => a.localeCompare(b, "de"));
 }
 
+// Eigene Dropdowns: öffnen bündig unter dem Feld und laufen nie aus dem Bild
+const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+
+function closeAllDD(except) {
+  document.querySelectorAll(".ddmenu").forEach((m) => { if (m !== except) m.hidden = true; });
+}
+
+function makeDD(host, opts, value, onChange) {
+  host.innerHTML = "";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ddbtn";
+  const menu = document.createElement("div");
+  menu.className = "menu ddmenu";
+  menu.hidden = true;
+  const label = () => (opts.find((o) => o.v === value) || opts[0]).t;
+  const sync = () => { btn.innerHTML = "<span>" + label() + "</span>" + CHEV; };
+  opts.forEach((o) => {
+    const it = document.createElement("button");
+    it.type = "button";
+    if (o.v === value) it.className = "on";
+    it.innerHTML = "<span>" + o.t + "</span>";
+    it.addEventListener("click", (e) => {
+      e.stopPropagation();
+      value = o.v;
+      menu.querySelectorAll("button").forEach((x) => x.classList.remove("on"));
+      it.classList.add("on");
+      sync();
+      menu.hidden = true;
+      onChange(o.v);
+    });
+    menu.appendChild(it);
+  });
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const wasOpen = !menu.hidden;
+    closeAllDD();
+    closeMenu();
+    menu.hidden = wasOpen;
+    if (!menu.hidden) {
+      menu.style.left = "0"; menu.style.right = "auto";
+      const r = menu.getBoundingClientRect();
+      if (r.right > window.innerWidth - 12) { menu.style.left = "auto"; menu.style.right = "0"; }
+    }
+  });
+  sync();
+  host.appendChild(btn);
+  host.appendChild(menu);
+}
+
 function updateFolderOptions() {
-  const sel = $("folderSel");
-  const current = sel.value;
-  sel.innerHTML = '<option value="">Alle Ordner</option>' +
-    allFolders().map((f) => '<option value="' + f.replace(/"/g, "&quot;") + '">📁 ' + f.replace(/</g, "&lt;") + "</option>").join("");
-  if ([...sel.options].some((o) => o.value === current)) sel.value = current;
+  const folders = allFolders();
+  if (!folders.includes(folderVal)) folderVal = "";
+  makeDD(
+    $("ddFolder"),
+    [{ v: "", t: "Alle Ordner" }, ...folders.map((f) => ({ v: f, t: "📁 " + f.replace(/</g, "&lt;") }))],
+    folderVal,
+    (v) => { folderVal = v; render(); }
+  );
 }
 
 function visible() {
   const q = $("search").value.trim().toLowerCase();
-  const f = $("filter").value;
-  const folder = $("folderSel").value;
+  const f = filterVal;
+  const folder = folderVal;
   let list = videos.filter((v) => (tab === "archive") === !!v.archived);
   list = list.filter((v) => !q || (v.title || "").toLowerCase().includes(q));
   if (folder) list = list.filter((v) => v.folder === folder);
   if (f === "protected") list = list.filter((v) => v.hasPassword || v.expiresAt);
   if (f === "open") list = list.filter((v) => !v.hasPassword && !v.expiresAt);
-  const s = $("sort").value;
+  const s = sortVal;
   list = [...list].sort((a, b) => {
     if (s === "old") return new Date(a.createdAt) - new Date(b.createdAt);
     if (s === "views") return (b.views || 0) - (a.views || 0);
@@ -580,6 +631,7 @@ function openMenu(v, anchor, acts, titleInput) {
 document.addEventListener("click", (e) => {
   if (!$("cardMenu").hidden && !$("cardMenu").contains(e.target)) closeMenu();
   if (!$("newMenu").hidden && !$("newMenu").contains(e.target) && e.target.closest("#newVideo") === null) $("newMenu").hidden = true;
+  if (!e.target.closest(".dd")) closeAllDD();
 });
 window.addEventListener("scroll", closeMenu, { passive: true });
 window.addEventListener("resize", closeMenu, { passive: true });
@@ -649,8 +701,7 @@ $("newFolder").addEventListener("click", () => {
     extraFolders.push(clean);
     try { localStorage.setItem("clip-folders", JSON.stringify(extraFolders)); } catch {}
   }
-  updateFolderOptions();
-  $("folderSel").value = clean;
+  folderVal = clean;
   render();
   toast('Ordner „' + clean + '“ angelegt – verschiebe Videos über das ⋯-Menü hinein');
 });
@@ -769,9 +820,17 @@ $("tokenGo").addEventListener("click", () => {
 $("tokenIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("tokenGo").click(); });
 
 $("search").addEventListener("input", render);
-$("sort").addEventListener("change", render);
-$("filter").addEventListener("change", render);
-$("folderSel").addEventListener("change", render);
+makeDD($("ddSort"), [
+  { v: "new", t: "Neueste zuerst" },
+  { v: "old", t: "Älteste zuerst" },
+  { v: "views", t: "Meiste Aufrufe" },
+  { v: "long", t: "Längste zuerst" },
+], sortVal, (v) => { sortVal = v; render(); });
+makeDD($("ddFilter"), [
+  { v: "all", t: "Alle" },
+  { v: "protected", t: "Geschützt" },
+  { v: "open", t: "Ohne Schutz" },
+], filterVal, (v) => { filterVal = v; render(); });
 document.querySelectorAll(".tabs button").forEach((b) => {
   b.addEventListener("click", () => {
     document.querySelectorAll(".tabs button").forEach((x) => x.classList.remove("active"));
