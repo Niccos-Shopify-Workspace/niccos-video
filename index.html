@@ -262,14 +262,17 @@ function render(d) {
   if (d.durationSec) parts.push(fmtTime(d.durationSec) + " Min.");
   parts.push(d.views + (d.views === 1 ? " Aufruf" : " Aufrufe"));
   $("metaLine").textContent = parts.join(" · ");
+  const DEFAULT_SPEED = 1.25;
   $("video").src = d.videoUrl;
+  $("video").defaultPlaybackRate = DEFAULT_SPEED;
+  $("video").playbackRate = DEFAULT_SPEED;
 
   const speeds = [0.75, 1, 1.25, 1.5, 2];
   $("speed").innerHTML = "";
   speeds.forEach((s) => {
     const b = document.createElement("button");
     b.textContent = s === 1 ? "1×" : s.toString().replace(".", ",") + "×";
-    b.className = s === 1 ? "active" : "";
+    b.className = s === DEFAULT_SPEED ? "active" : "";
     b.addEventListener("click", () => {
       $("video").playbackRate = s;
       $("speed").querySelectorAll("button").forEach((x) => x.classList.remove("active"));
