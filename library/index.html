@@ -237,15 +237,18 @@
   <div id="gate" class="gate" hidden>
     <div id="gateMail">
       <h2>Anmelden</h2>
-      <p>Mit deiner NICCOS-Adresse anmelden. Du bekommst einen Link per Mail, ein Passwort brauchst du nicht.</p>
+      <p>Mit deinem NICCOS-OS-Konto anmelden. Du bekommst einen Code per Mail, ein Passwort brauchst du nicht.</p>
       <input type="email" id="mailIn" placeholder="name@niccos.com" autocomplete="email">
       <div class="err" id="mailErr" hidden></div>
-      <button id="mailGo" type="button">Anmelde-Link senden</button>
+      <button id="mailGo" type="button">Code senden</button>
       <button class="linkbtn" id="useToken" type="button">Stattdessen mit App-Token anmelden</button>
     </div>
     <div id="gateSent" hidden>
-      <h2>Schau in dein Postfach</h2>
-      <p>Wir haben einen Anmelde-Link an <b id="sentTo"></b> geschickt. Klick darauf, dann bist du in der Bibliothek. Der Link gilt eine Stunde.</p>
+      <h2>Code eingeben</h2>
+      <p>Wir haben einen Code an <b id="sentTo"></b> geschickt. Er kommt vom NICCOS OS.</p>
+      <input type="text" id="codeIn" inputmode="numeric" autocomplete="one-time-code" placeholder="Code aus der Mail" maxlength="10">
+      <div class="err" id="codeErr" hidden></div>
+      <button id="codeGo" type="button">Anmelden</button>
       <button class="linkbtn" id="mailAgain" type="button">Andere Adresse verwenden</button>
     </div>
     <div id="gateToken" hidden>
@@ -336,11 +339,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const API = "https://jczmvbflyrehpywngnro.supabase.co/functions/v1/clip";
-const SUPA_URL = "https://jczmvbflyrehpywngnro.supabase.co";
-const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impjem12YmZseXJlaHB5d25nbnJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzMTkwMDksImV4cCI6MjEwOTg5NTAwOX0.tEuAwjXiTPIUl7aUFiDcD2Ow_94A-RpfAqOdO3jGdpE";
+// Anmeldung über das NICCOS-OS-Konto (os.niccos.com); öffentlicher Browser-Schlüssel des OS-Projekts
+const OS_URL = "https://pqcnrioblyipkqytrrvc.supabase.co";
+const OS_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxY25yaW9ibHlpcGtxeXRycnZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNDU1ODIsImV4cCI6MjA4OTcyMTU4Mn0.G73Jph-dVHP_dBBDs-Ph4hBEtu8sCOZvtJ9_0N91KNE";
 const $ = (id) => document.getElementById(id);
-const sb = window.supabase.createClient(SUPA_URL, SUPA_ANON, {
-  auth: { flowType: "implicit", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true },
+const sb = window.supabase.createClient(OS_URL, OS_ANON, {
+  auth: { storageKey: "niccos-clip-os-auth", detectSessionInUrl: false, persistSession: true, autoRefreshToken: true },
 });
 let SESSION = null;
 let TOKEN = "";
@@ -423,7 +427,7 @@ async function load() {
     if (SESSION) {
       await sb.auth.signOut().catch(() => {});
       SESSION = null;
-      $("mailErr").textContent = "Diese Adresse hat keinen Zugriff auf die Bibliothek.";
+      $("mailErr").textContent = "Diese Adresse hat keinen Zugriff auf die Bibliothek. Nur @niccos.com-Konten kommen rein.";
       $("mailErr").hidden = false;
       updateWho();
       gateView("gateMail");
@@ -903,26 +907,47 @@ $("mailGo").addEventListener("click", async () => {
   }
   $("mailGo").disabled = true;
   $("mailGo").textContent = "Sende …";
-  const res = await fetch(API + "/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  }).catch(() => null);
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
   $("mailGo").disabled = false;
-  $("mailGo").textContent = "Anmelde-Link senden";
-  if (res && res.ok) {
+  $("mailGo").textContent = "Code senden";
+  if (!error) {
     $("sentTo").textContent = email;
+    $("codeIn").value = "";
+    $("codeErr").hidden = true;
     gateView("gateSent");
+    setTimeout(() => $("codeIn").focus(), 50);
     return;
   }
-  err.textContent = res && res.status === 429
-    ? "Zu viele Anmelde-Mails in kurzer Zeit. Bitte in ein paar Minuten nochmal versuchen."
-    : res && res.status === 403
-      ? "Bitte eine Adresse mit @niccos.com verwenden."
-      : "Die Mail konnte nicht verschickt werden. Bitte später nochmal versuchen.";
+  const msg = String(error.message || "");
+  err.textContent = /signups not allowed|otp_disabled/i.test(msg) || error.status === 422
+    ? "Für diese Adresse gibt es kein NICCOS-OS-Konto."
+    : error.status === 429
+      ? "Zu viele Codes in kurzer Zeit. Bitte in ein paar Minuten nochmal versuchen."
+      : "Der Code konnte nicht verschickt werden. Bitte später nochmal versuchen.";
   err.hidden = false;
 });
 $("mailIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("mailGo").click(); });
+
+$("codeGo").addEventListener("click", async () => {
+  const email = $("sentTo").textContent;
+  const token = $("codeIn").value.replace(/\s/g, "");
+  const err = $("codeErr");
+  err.hidden = true;
+  if (!token) return;
+  $("codeGo").disabled = true;
+  $("codeGo").textContent = "Prüfe …";
+  const { data, error } = await sb.auth.verifyOtp({ email, token, type: "email" });
+  $("codeGo").disabled = false;
+  $("codeGo").textContent = "Anmelden";
+  if (error || !data.session) {
+    err.textContent = "Der Code stimmt nicht oder ist abgelaufen.";
+    err.hidden = false;
+    return;
+  }
+  SESSION = data.session;
+  load();
+});
+$("codeIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("codeGo").click(); });
 $("mailAgain").addEventListener("click", () => gateView("gateMail"));
 $("useToken").addEventListener("click", () => gateView("gateToken"));
 $("useMail").addEventListener("click", () => gateView("gateMail"));
@@ -965,16 +990,8 @@ document.querySelectorAll(".tabs button").forEach((b) => {
 });
 
 (async () => {
-  // Fehler aus einem abgelaufenen oder schon benutzten Anmelde-Link
-  const hash = new URLSearchParams(location.hash.slice(1));
-  const linkError = hash.get("error_description");
   const { data } = await sb.auth.getSession();
   SESSION = data.session || null;
-  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-  if (!SESSION && linkError) {
-    $("mailErr").textContent = "Der Anmelde-Link ist abgelaufen oder wurde schon benutzt. Fordere einfach einen neuen an.";
-    $("mailErr").hidden = false;
-  }
   load();
 })();
 </script>
