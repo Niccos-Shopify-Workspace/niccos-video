@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<script>
+  // Kopien auf github.io leiten auf die eigene Domain weiter
+  if (/github\.io$/.test(location.hostname)) {
+    location.replace("https://video.niccos.com" + location.pathname.replace(/^\/niccos-video/, "") + location.search + location.hash);
+  }
+</script>
 <title>NICCOS · Video</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -119,7 +125,7 @@
 <div class="wrap">
   <header class="site">
     <a href="https://www.niccos.com" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none">
-      <img class="wordmark" src="/niccos-video/assets/niccos-logo-black.svg" alt="NICCOS">
+      <img class="wordmark" src="/assets/niccos-logo-black.svg" alt="NICCOS">
     </a>
     <span class="pro">CLIP</span>
     <span class="kicker">Video</span>
@@ -381,7 +387,7 @@ async function copyText(text, btn, okLabel) {
   setTimeout(() => { btn.innerHTML = orig; }, 1800);
 }
 $("copyLink").addEventListener("click", () => {
-  copyText(location.origin + location.pathname.replace(/[^/]*$/, "") + "?v=" + SLUG, $("copyLink"), "Kopiert");
+  copyText(location.origin + "/?v=" + SLUG, $("copyLink"), "Kopiert");
 });
 $("copyTranscript").addEventListener("click", () => {
   copyText($("transcriptText").textContent, $("copyTranscript"), "Kopiert");
