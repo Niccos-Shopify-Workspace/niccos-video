@@ -32,6 +32,20 @@
     color: var(--ink-soft); background: var(--active); border-radius: 6px; padding: 2px 7px;
   }
   .pagename { color: var(--muted); margin-left: 6px; font-size: 13px; }
+  .who { margin-left: auto; color: var(--muted); font-size: 12.5px; }
+  .logout {
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+    background: var(--paper); color: var(--ink-soft);
+  }
+  .logout:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .who[hidden] + .logout { margin-left: auto; }
+  .gate .linkbtn {
+    width: auto; margin-top: 14px; padding: 0; background: transparent; border: 0;
+    color: var(--muted); font-size: 12.5px; font-weight: 500; text-decoration: underline;
+    text-underline-offset: 3px; cursor: pointer; display: block;
+  }
+  .gate .linkbtn:hover { color: var(--ink); }
   .kicker { text-transform: uppercase; letter-spacing: 0.16em; font-size: 10.5px; color: var(--muted); font-weight: 600; }
   .headrow { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 2px 0 20px; }
   h1 { font-weight: 500; font-size: 30px; letter-spacing: -0.02em; }
@@ -216,14 +230,32 @@
     <img class="wordmark" src="../assets/niccos-logo-black.svg" alt="NICCOS">
     <span class="pro">CLIP</span>
     <span class="pagename">Bibliothek</span>
+    <span class="who" id="who" hidden></span>
+    <button class="logout" id="logout" type="button" hidden>Abmelden</button>
   </header>
 
   <div id="gate" class="gate" hidden>
-    <h2>Private Bibliothek</h2>
-    <p>Bitte App-Token eingeben (steht in <code>~/Movies/NICCOS Clips/.config.json</code>). Wird nur in diesem Browser gespeichert.</p>
-    <input type="password" id="tokenIn" placeholder="App-Token">
-    <div class="err" id="gateErr" hidden>Token ungültig.</div>
-    <button id="tokenGo">Öffnen</button>
+    <div id="gateMail">
+      <h2>Anmelden</h2>
+      <p>Mit deiner NICCOS-Adresse anmelden. Du bekommst einen Link per Mail, ein Passwort brauchst du nicht.</p>
+      <input type="email" id="mailIn" placeholder="name@niccos.com" autocomplete="email">
+      <div class="err" id="mailErr" hidden></div>
+      <button id="mailGo" type="button">Anmelde-Link senden</button>
+      <button class="linkbtn" id="useToken" type="button">Stattdessen mit App-Token anmelden</button>
+    </div>
+    <div id="gateSent" hidden>
+      <h2>Schau in dein Postfach</h2>
+      <p>Wir haben einen Anmelde-Link an <b id="sentTo"></b> geschickt. Klick darauf, dann bist du in der Bibliothek. Der Link gilt eine Stunde.</p>
+      <button class="linkbtn" id="mailAgain" type="button">Andere Adresse verwenden</button>
+    </div>
+    <div id="gateToken" hidden>
+      <h2>Mit App-Token anmelden</h2>
+      <p>Das Token steht in <code>~/Movies/NICCOS Clips/.config.json</code>. Es wird nur in diesem Browser gespeichert.</p>
+      <input type="password" id="tokenIn" placeholder="App-Token">
+      <div class="err" id="gateErr" hidden>Token ungültig.</div>
+      <button id="tokenGo" type="button">Öffnen</button>
+      <button class="linkbtn" id="useMail" type="button">Zurück zur Anmeldung per Mail</button>
+    </div>
   </div>
 
   <div id="main" hidden>
@@ -301,9 +333,16 @@
 <div class="menu" id="cardMenu" hidden></div>
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const API = "https://jczmvbflyrehpywngnro.supabase.co/functions/v1/clip";
+const SUPA_URL = "https://jczmvbflyrehpywngnro.supabase.co";
+const SUPA_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impjem12YmZseXJlaHB5d25nbnJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzMTkwMDksImV4cCI6MjEwOTg5NTAwOX0.tEuAwjXiTPIUl7aUFiDcD2Ow_94A-RpfAqOdO3jGdpE";
 const $ = (id) => document.getElementById(id);
+const sb = window.supabase.createClient(SUPA_URL, SUPA_ANON, {
+  auth: { flowType: "implicit", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true },
+});
+let SESSION = null;
 let TOKEN = "";
 let videos = [];
 let activeId = null;
@@ -352,23 +391,49 @@ function show(id) {
 }
 
 async function api(path, body) {
+  const headers = { "Content-Type": "application/json" };
+  if (SESSION) headers.Authorization = "Bearer " + SESSION.access_token;
+  else if (TOKEN) headers["x-app-token"] = TOKEN;
   const res = await fetch(API + path, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-app-token": TOKEN },
+    headers,
     body: JSON.stringify(body || {}),
   });
   return { status: res.status, data: await res.json().catch(() => ({})) };
 }
 
+function gateView(which) {
+  ["gateMail", "gateSent", "gateToken"].forEach((x) => $(x).hidden = x !== which);
+  show("gate");
+}
+
+function updateWho() {
+  const email = SESSION?.user?.email || "";
+  $("who").textContent = email;
+  $("who").hidden = !email;
+  $("logout").hidden = !(SESSION || TOKEN);
+}
+
 async function load() {
-  if (!TOKEN) { show("gate"); return; }
+  updateWho();
+  if (!SESSION && !TOKEN) { gateView("gateMail"); return; }
   show("loading");
   const { status, data } = await api("/list");
   if (status === 401) {
-    try { localStorage.removeItem("clip-token"); } catch {}
-    TOKEN = "";
-    $("gateErr").hidden = false;
-    show("gate");
+    if (SESSION) {
+      await sb.auth.signOut().catch(() => {});
+      SESSION = null;
+      $("mailErr").textContent = "Diese Adresse hat keinen Zugriff auf die Bibliothek.";
+      $("mailErr").hidden = false;
+      updateWho();
+      gateView("gateMail");
+    } else {
+      try { localStorage.removeItem("clip-token"); } catch {}
+      TOKEN = "";
+      $("gateErr").hidden = false;
+      updateWho();
+      gateView("gateToken");
+    }
     return;
   }
   videos = data.videos || [];
@@ -825,6 +890,58 @@ $("tokenGo").addEventListener("click", () => {
 });
 $("tokenIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("tokenGo").click(); });
 
+// ---------- Anmeldung per Firmen-Mail ----------
+
+$("mailGo").addEventListener("click", async () => {
+  const email = $("mailIn").value.trim().toLowerCase();
+  const err = $("mailErr");
+  err.hidden = true;
+  if (!/^[^@\s]+@niccos\.com$/.test(email)) {
+    err.textContent = "Bitte eine Adresse mit @niccos.com verwenden.";
+    err.hidden = false;
+    return;
+  }
+  $("mailGo").disabled = true;
+  $("mailGo").textContent = "Sende …";
+  const res = await fetch(API + "/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  }).catch(() => null);
+  $("mailGo").disabled = false;
+  $("mailGo").textContent = "Anmelde-Link senden";
+  if (res && res.ok) {
+    $("sentTo").textContent = email;
+    gateView("gateSent");
+    return;
+  }
+  err.textContent = res && res.status === 429
+    ? "Zu viele Anmelde-Mails in kurzer Zeit. Bitte in ein paar Minuten nochmal versuchen."
+    : res && res.status === 403
+      ? "Bitte eine Adresse mit @niccos.com verwenden."
+      : "Die Mail konnte nicht verschickt werden. Bitte später nochmal versuchen.";
+  err.hidden = false;
+});
+$("mailIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("mailGo").click(); });
+$("mailAgain").addEventListener("click", () => gateView("gateMail"));
+$("useToken").addEventListener("click", () => gateView("gateToken"));
+$("useMail").addEventListener("click", () => gateView("gateMail"));
+
+$("logout").addEventListener("click", async () => {
+  if (SESSION) await sb.auth.signOut().catch(() => {});
+  SESSION = null;
+  TOKEN = "";
+  try { localStorage.removeItem("clip-token"); } catch {}
+  videos = [];
+  updateWho();
+  gateView("gateMail");
+});
+
+sb.auth.onAuthStateChange((event, session) => {
+  SESSION = session;
+  updateWho();
+});
+
 $("search").addEventListener("input", render);
 makeDD($("ddSort"), [
   { v: "new", t: "Neueste zuerst" },
@@ -847,7 +964,19 @@ document.querySelectorAll(".tabs button").forEach((b) => {
   });
 });
 
-load();
+(async () => {
+  // Fehler aus einem abgelaufenen oder schon benutzten Anmelde-Link
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const linkError = hash.get("error_description");
+  const { data } = await sb.auth.getSession();
+  SESSION = data.session || null;
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  if (!SESSION && linkError) {
+    $("mailErr").textContent = "Der Anmelde-Link ist abgelaufen oder wurde schon benutzt. Fordere einfach einen neuen an.";
+    $("mailErr").hidden = false;
+  }
+  load();
+})();
 </script>
 </body>
 </html>
