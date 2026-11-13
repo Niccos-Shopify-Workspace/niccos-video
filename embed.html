@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>NICCOS · Video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FCFCFB; --ink: #1A1915; --ink-soft: #4A4945; --muted: #6F6E69;
+    --line: #E4E2DC; --hover: #EFEEE9; --active: #ECEBE5;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--ink); overflow: hidden; }
+  body { font-family: "Manrope", -apple-system, sans-serif; color: var(--paper); }
+  .frame { position: relative; width: 100%; height: 100%; background: var(--ink); }
+  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .poster {
+    position: absolute; inset: 0; cursor: pointer; border: 0; padding: 0;
+    background: var(--ink) center / cover no-repeat;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .poster::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(26,25,21,0.05) 40%, rgba(26,25,21,0.45));
+  }
+  .play {
+    position: relative; z-index: 1;
+    width: clamp(56px, 13vmin, 92px); height: clamp(56px, 13vmin, 92px);
+    border-radius: 50%; background: rgba(252,252,251,0.95);
+    box-shadow: 0 10px 34px rgba(26,25,21,0.35);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .poster:hover .play, .poster:focus-visible .play { transform: scale(1.06); background: var(--paper); }
+  .play svg { width: 36%; height: 36%; margin-left: 7%; fill: var(--ink); }
+  .dur {
+    position: absolute; z-index: 1; right: 14px; bottom: 12px;
+    background: rgba(26,25,21,0.85); color: var(--paper); font-size: 12px; font-weight: 600;
+    font-variant-numeric: tabular-nums; border-radius: 6px; padding: 3px 8px;
+  }
+  .speed { position: absolute; z-index: 3; top: 12px; right: 12px; }
+  .speedbtn {
+    font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1px solid rgba(252,252,251,0.3); background: rgba(26,25,21,0.7); color: var(--paper);
+    border-radius: 999px; padding: 5px 11px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .speedbtn:hover { background: rgba(26,25,21,0.88); }
+  .speedbtn svg { width: 10px; height: 10px; }
+  .menu {
+    position: absolute; top: calc(100% + 6px); right: 0; min-width: 96px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 14px 40px rgba(26,25,21,0.3); padding: 5px;
+  }
+  .menu button {
+    display: block; width: 100%; font: inherit; font-size: 12.5px; text-align: left;
+    border: 0; background: transparent; color: var(--ink); border-radius: 7px;
+    padding: 7px 10px; cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .menu button:hover { background: var(--hover); }
+  .menu button.on { background: var(--active); font-weight: 600; }
+  .msg {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: rgba(252,252,251,0.7); font-size: 14px; text-align: center; padding: 20px;
+  }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <video id="video" playsinline preload="metadata"></video>
+  <button class="poster" id="poster" type="button" aria-label="Video abspielen" hidden>
+    <span class="play"><svg viewBox="0 0 24 24"><path d="M6 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L7.5 3.64A1 1 0 0 0 6 4.5Z"/></svg></span>
+    <span class="dur" id="dur" hidden></span>
+  </button>
+  <div class="speed" id="speed" hidden>
+    <button class="speedbtn" id="speedBtn" type="button" aria-label="Wiedergabetempo"></button>
+    <div class="menu" id="speedMenu" hidden></div>
+  </div>
+  <div class="msg" id="msg" hidden></div>
+</div>
+<script>
+const API = "https://jczmvbflyrehpywngnro.supabase.co/functions/v1/clip";
+const SLUG = ((location.pathname.match(/\/embed\/([a-z0-9]+)/i) || [])[1]
+  || new URLSearchParams(location.search).get("v") || "").replace(/[^a-z0-9]/gi, "");
+const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
+const DEFAULT_SPEED = 1.25;
+const $ = (id) => document.getElementById(id);
+const video = $("video");
+let announced = false;
+let counted = false;
+let toldUploading = false;
+
+// Meldung an die einbettende Seite (OS zeigt das Video erst nach "ready")
+function tell(status, reason) {
+  if (announced) return;
+  announced = true;
+  const msg = { type: "niccos-video", status };
+  if (reason) msg.reason = reason;
+  try { window.parent.postMessage(msg, "*"); } catch {}
+}
+
+function unavailable(reason, text) {
+  $("poster").hidden = true;
+  $("speed").hidden = true;
+  $("msg").textContent = text;
+  $("msg").hidden = false;
+  tell("unavailable", reason);
+}
+
+function fmtTime(s) {
+  s = Math.max(0, Math.floor(s || 0));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function speedLabel(s) { return (s === 1 ? "1" : String(s).replace(".", ",")) + "×"; }
+
+function buildSpeed() {
+  const btn = $("speedBtn"), menu = $("speedMenu");
+  const sync = () => {
+    btn.innerHTML = speedLabel(video.playbackRate) +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+    menu.querySelectorAll("button").forEach((b) => b.classList.toggle("on", Number(b.dataset.s) === video.playbackRate));
+  };
+  menu.innerHTML = "";
+  SPEEDS.forEach((s) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.s = s;
+    b.textContent = speedLabel(s);
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      video.defaultPlaybackRate = s;
+      video.playbackRate = s;
+      menu.hidden = true;
+      sync();
+    });
+    menu.appendChild(b);
+  });
+  btn.addEventListener("click", (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; });
+  document.addEventListener("click", () => { menu.hidden = true; });
+  video.addEventListener("ratechange", sync);
+  sync();
+}
+
+async function load() {
+  if (!SLUG) { unavailable("not_found", "Video nicht gefunden."); return; }
+  let res;
+  try {
+    res = await fetch(API + "/watch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: SLUG, count: false }),
+    });
+  } catch {
+    unavailable("not_found", "Video konnte nicht geladen werden.");
+    return;
+  }
+  const d = await res.json().catch(() => ({}));
+  if (res.status === 404) { unavailable("not_found", "Video nicht gefunden."); return; }
+  if (res.status === 410) { unavailable("expired", "Dieses Video ist nicht mehr verfügbar."); return; }
+  if (d.needPassword) { unavailable("password", "Dieses Video ist geschützt."); return; }
+  if (d.uploading) {
+    // OS bekommt die Meldung, prüft aber selbst erneut; die Seite wartet still weiter
+    $("msg").textContent = "Video wird vorbereitet …";
+    $("msg").hidden = false;
+    if (!toldUploading) {
+      toldUploading = true;
+      try { window.parent.postMessage({ type: "niccos-video", status: "unavailable", reason: "uploading" }, "*"); } catch {}
+    }
+    setTimeout(load, 10000);
+    return;
+  }
+  if (!res.ok || !d.videoUrl) { unavailable("not_found", "Video konnte nicht geladen werden."); return; }
+
+  $("msg").hidden = true;
+  if (d.thumbUrl) $("poster").style.backgroundImage = 'url("' + d.thumbUrl + '")';
+  if (d.durationSec) { $("dur").textContent = fmtTime(d.durationSec); $("dur").hidden = false; }
+  document.title = (d.title || "Video") + " · NICCOS";
+  $("poster").setAttribute("aria-label", "Video abspielen: " + (d.title || ""));
+
+  video.defaultPlaybackRate = DEFAULT_SPEED;
+  video.playbackRate = DEFAULT_SPEED;
+  video.src = d.videoUrl;
+  $("poster").hidden = false;
+  $("speed").hidden = false;
+  buildSpeed();
+
+  // Abspielbar, sobald der Browser die Metadaten hat. Manche Mobilbrowser laden vor dem
+  // ersten Tippen nichts vor, deshalb zusätzlich ein Mini-Abruf der Datei als Bestätigung.
+  video.addEventListener("loadedmetadata", () => tell("ready"), { once: true });
+  video.addEventListener("error", () => { if (!announced) unavailable("not_found", "Video konnte nicht geladen werden."); }, { once: true });
+  fetch(d.videoUrl, { headers: { Range: "bytes=0-1" } })
+    .then((r) => { if (r.ok || r.status === 206) tell("ready"); })
+    .catch(() => {});
+}
+
+$("poster").addEventListener("click", () => {
+  $("poster").hidden = true;
+  video.controls = true;
+  video.playbackRate = video.defaultPlaybackRate;
+  video.play().catch(() => {});
+});
+
+video.addEventListener("play", () => {
+  if (counted) return;
+  counted = true;
+  fetch(API + "/view", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug: SLUG }),
+  }).catch(() => {});
+});
+
+load();
+</script>
+</body>
+</html>

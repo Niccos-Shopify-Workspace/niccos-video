@@ -1,5 +1,20 @@
 {
   "rewrites": [
-    { "source": "/s/:slug", "destination": "/index.html" }
+    { "source": "/s/:slug", "destination": "/index.html" },
+    { "source": "/embed/:slug", "destination": "/embed.html" }
+  ],
+  "headers": [
+    {
+      "source": "/embed/(.*)",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://os.niccos.com https://*.niccos.com http://localhost:*" }
+      ]
+    },
+    {
+      "source": "/embed.html",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self' https://os.niccos.com https://*.niccos.com http://localhost:*" }
+      ]
+    }
   ]
 }
